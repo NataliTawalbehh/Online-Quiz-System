@@ -1,0 +1,101 @@
+<template>
+  <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 q-pa-sm">
+    <q-card class="br-8">
+      <q-card-section>
+        <div class="row justify-between items-center">
+          <div>
+            <div class="quiz-title text-h5">
+              <q-icon name="score" size="30px" />
+              {{ quiz.title }}
+            </div>
+            <span>{{ quiz.date }}</span>
+          </div>
+          <div class="column text-caption text-grey">
+            <q-badge text-color="green" color="white" class="q-mr-sm"
+              >Start {{ quiz.start }}</q-badge
+            >
+            <q-badge text-color="red" color="white" class="q-mr-sm"
+              >End {{ quiz.end }}</q-badge
+            >
+          </div>
+        </div>
+
+        <div class="q-mt-md" style="color: #262b43">
+          <div class="text-body1">
+            {{ quiz.teacher }}
+            <br />
+            <span>{{ quiz.points }} Points</span>
+            <br />
+            <span>{{ quiz.students }} Students</span>
+          </div>
+        </div>
+      </q-card-section>
+
+    </q-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+// import { ref, computed } from 'vue';
+import { PropType } from 'vue';
+
+
+
+defineProps({
+  quiz: {
+    type: Object as PropType<Quiz>,
+    default: {} as Quiz,
+  },
+});
+
+interface Question {
+  id: number;
+  text: string;
+  options: string[];
+  correctAnswer: string;
+}
+interface Quiz {
+  id: number;
+  title: string;
+  start: string;
+  end: string;
+  date: string;
+  teacher: string;
+  points: number;
+  students: number;
+  status: string;
+  questions: Question[];
+}
+
+
+
+
+</script>
+
+<style scoped>
+
+
+.q-card {
+  max-width: 100%;
+  transition: transform 0.3s ease;
+}
+
+.q-card-section img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.q-btn {
+  width: 100%;
+  max-width: 200px;
+  font-size: 14px;
+}
+
+@media (min-width: 1440px) {
+  .q-btn {
+    max-width: 118px;
+    font-size: 16px;
+  }
+}
+</style>
