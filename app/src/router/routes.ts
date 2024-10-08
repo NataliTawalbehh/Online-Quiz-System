@@ -32,6 +32,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: RoutesPaths.QUESTION,
+        name:'question',
         component: () => import('src/pages/student/QuestionPage.vue'),
         props: true,
       },
@@ -71,6 +72,12 @@ const routes: RouteRecordRaw[] = [
         path: RoutesPaths.STUDENT_GRADES,
         component: () => import('src/pages/teacher/StudentsGradesPage.vue'),
         name: 'student-grade',
+        props: true,
+      },
+      {
+        path: RoutesPaths. SCORE_RESULT ,
+        component: () => import('src/pages/teacher/ScoreResultPage.vue'),
+        name: 'score_result',
         props: true,
       },
     ],

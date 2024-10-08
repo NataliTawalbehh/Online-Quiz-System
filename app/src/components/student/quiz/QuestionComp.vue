@@ -12,8 +12,8 @@
       header-class="none"
     >
       <q-step
-        v-for="(question, index) in quiz.questions"
-        :key="question.id"
+        v-for="(question, index) in props.quiz.questions"
+        :key="index"
         :name="index"
         :title="'Question ' + (index + 1)"
         icon="question_answer"
@@ -22,19 +22,21 @@
         <div class="q-card__section column">
           <div class="text-h5 q-mb-lg">
             <q-icon name="score" size="40px" color="yellow" />
-            Question {{ question.question }}
+            Question {{ index + 1 }}: {{ question.question }}
           </div>
-          <div class="text-body1">{{ question.text }}</div>
         </div>
 
         <div>
           <div
-            v-for="option in question.options"
-            :key="option"
+            v-for="(option, optionIndex) in question.options"
+            :key="optionIndex"
             class="text-body1"
           >
-            <q-radio v-model="selectedOption[`${index}`]" :val="option" />
-            {{ option }}
+            <q-radio
+              v-model="selectedOption[currentQuestionIndex]"
+              :val="option.text"
+            />
+            {{ option.text }}
           </div>
         </div>
       </q-step>
@@ -49,7 +51,6 @@
       :disable="isFirstQuestion"
       outline
       class="br-8"
-      
     />
     <q-btn
       v-if="!isLastQuestion"
@@ -67,7 +68,7 @@
       <q-card-section>
         <div class="text-h6">Submitting the quiz!</div>
         <div class="q-mt-md">
-          Are you sure!, Once you submit, you cannot go back.
+          Are you sure! Once you submit, you cannot go back.
         </div>
       </q-card-section>
 
@@ -95,444 +96,183 @@
 <script setup lang="ts">
 import DataObject from 'src/models/DataObject';
 import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { LocalStorage } from 'quasar';
+import GetAllQuizResults from 'src/functions/GetAllQuizResults';
 import eventBus from '../../../Event/QuizEventBus';
 
 interface Question {
-  id: number;
-  question: number;
-  text: string;
-  options: string[];
-  correctAnswer: string;
+  question: string;
+  multipleChoices: boolean;
+  point: number;
+  options: {
+    text: string;
+    correct: boolean;
+  }[];
 }
 
 interface Quiz {
   id: number;
-  title: string;
-  start: string;
-  end: string;
   date: string;
+  description: string;
+  name: string;
   teacher: string;
   points: number;
   students: number;
+  start: string;
+  end: string;
   status: string;
+  totalQuestion: number;
+  totalPoint: number;
   questions: Question[];
 }
 
-const quizzes = ref<Quiz[]>([
-  {
-    id: 1,
-    title: 'Arabic Quiz',
-    start: '08:00 am',
-    end: '09:00 am',
-    date: '09/09/2024',
-    teacher: 'Teacher A',
-    points: 50,
-    students: 30,
-    status: 'active',
-    questions: [
-      {
-        id: 1,
-        question: 1,
-        text: 'What is the meaning of the word "Shorouq"?',
-        options: ['Morning', 'Evening', 'Noon', 'Night'],
-        correctAnswer: 'Morning',
-      },
-      {
-        id: 2,
-        question: 2,
-        text: 'What is the plural of the word "Pen"?',
-        options: ['Pens', 'My pens', 'Two pens', 'Pen knife'],
-        correctAnswer: 'Pens',
-      },
-      {
-        id: 3,
-        question: 3,
-        text: 'Complete the sentence: "Knowledge is light and ..."',
-        options: [
-          'Ignorance is darkness',
-          'Wisdom is key',
-          'Power is a weapon',
-          'Thought is guide',
-        ],
-        correctAnswer: 'Ignorance is darkness',
-      },
-    ],
-  },
-
-  {
-    id: 2,
-    title: 'Math Quiz',
-    start: '10:00 am',
-    end: '11:00 am',
-    date: '10/09/2024',
-    teacher: 'Teacher B',
-    points: 40,
-    students: 25,
-    status: 'inactive',
-    questions: [
-      {
-        id: 1,
-        question: 1,
-        text: 'What is the result of 5 × 6?',
-        options: ['30', '25', '35', '40'],
-        correctAnswer: '30',
-      },
-      {
-        id: 2,
-        question: 2,
-        text: 'What is the result of 10 ÷ 2?',
-        options: ['5', '4', '6', '8'],
-        correctAnswer: '5',
-      },
-      {
-        id: 3,
-        question: 3,
-        text: 'What is the value of π?',
-        options: ['3.14', '2.14', '3.41', '4.13'],
-        correctAnswer: '3.14',
-      },
-    ],
-  },
-  {
-    id: 3,
-    title: 'Science Quiz',
-    start: '01:00 pm',
-    end: '02:00 pm',
-    date: '11/09/2024',
-    teacher: 'Teacher C',
-    points: 60,
-    students: 20,
-    status: 'active',
-    questions: [
-      {
-        id: 1,
-        question: 1,
-        text: 'What is the unit of energy?',
-        options: ['Joule', 'Newton', 'Watt', 'Kilo'],
-        correctAnswer: 'Joule',
-      },
-      {
-        id: 2,
-        question: 2,
-        text: 'Which planet is closest to the Sun?',
-        options: ['Mercury', 'Venus', 'Earth', 'Mars'],
-        correctAnswer: 'Mercury',
-      },
-      {
-        id: 3,
-        question: 3,
-        text: 'What is the state of matter when heated strongly?',
-        options: ['Gaseous', 'Liquid', 'Solid', 'Plasma'],
-        correctAnswer: 'Plasma',
-      },
-    ],
-  },
-  {
-    id: 4,
-    title: 'History Quiz',
-    start: '03:00 pm',
-    end: '04:00 pm',
-    date: '12/09/2024',
-    teacher: 'Teacher D',
-    points: 55,
-    students: 28,
-    status: 'active',
-    questions: [
-      {
-        id: 1,
-        question: 1,
-        text: 'In what year did the French Revolution occur?',
-        options: ['1789', '1776', '1804', '1815'],
-        correctAnswer: '1789',
-      },
-      {
-        id: 2,
-        question: 2,
-        text: 'Who was the first president of the United States?',
-        options: [
-          'George Washington',
-          'Abraham Lincoln',
-          'Thomas Jefferson',
-          'John Kennedy',
-        ],
-        correctAnswer: 'George Washington',
-      },
-      {
-        id: 3,
-        question: 3,
-        text: 'Which civilization built the pyramids?',
-        options: ['Egyptian', 'Roman', 'Babylonian', 'Chinese'],
-        correctAnswer: 'Egyptian',
-      },
-    ],
-  },
-  {
-    id: 5,
-    title: 'Geography Quiz',
-    start: '09:00 am',
-    end: '10:00 am',
-    date: '13/09/2024',
-    teacher: 'Teacher E',
-    points: 45,
-    students: 32,
-    status: 'inactive',
-    questions: [
-      {
-        id: 1,
-        question: 1,
-        text: 'What is the capital of Japan?',
-        options: ['Tokyo', 'Beijing', 'Seoul', 'Bangkok'],
-        correctAnswer: 'Tokyo',
-      },
-      {
-        id: 2,
-        question: 2,
-        text: 'What is the largest ocean in the world?',
-        options: [
-          'Pacific Ocean',
-          'Atlantic Ocean',
-          'Indian Ocean',
-          'Arctic Ocean',
-        ],
-        correctAnswer: 'Pacific Ocean',
-      },
-      {
-        id: 3,
-        question: 3,
-        text: 'What is the highest mountain peak in the world?',
-        options: ['Everest', 'Kilimanjaro', 'Elbrus', 'McKinley'],
-        correctAnswer: 'Everest',
-      },
-    ],
-  },
-  {
-    id: 6,
-    title: 'Physics Quiz',
-    start: '11:00 am',
-    end: '12:00 pm',
-    date: '14/09/2024',
-    teacher: 'Teacher F',
-    points: 70,
-    students: 27,
-    status: 'active',
-    questions: [
-      {
-        id: 1,
-        question: 1,
-        text: 'What is the speed of light in a vacuum?',
-        options: [
-          '300,000 km/s',
-          '150,000 km/s',
-          '450,000 km/s',
-          '600,000 km/s',
-        ],
-        correctAnswer: '300,000 km/s',
-      },
-      {
-        id: 2,
-        question: 2,
-        text: 'What is Newton’s first law?',
-        options: [
-          'An object in motion stays in motion',
-          'Force equals mass times acceleration',
-          'For every action there is an equal and opposite reaction',
-        ],
-        correctAnswer: 'An object in motion stays in motion',
-      },
-      {
-        id: 3,
-        question: 3,
-        text: 'What is the symbol for acceleration?',
-        options: ['a', 'v', 't', 'm'],
-        correctAnswer: 'a',
-      },
-    ],
-  },
-  {
-    id: 7,
-    title: 'Chemistry Quiz',
-    start: '02:00 pm',
-    end: '03:00 pm',
-    date: '15/09/2024',
-    teacher: 'Teacher G',
-    points: 65,
-    students: 22,
-    status: 'inactive',
-    questions: [
-      {
-        id: 1,
-        question: 1,
-        text: 'What is the chemical formula of water?',
-        options: ['H2O', 'O2', 'CO2', 'H2'],
-        correctAnswer: 'H2O',
-      },
-      {
-        id: 2,
-        question: 2,
-        text: 'What element is found in every organic compound?',
-        options: ['Carbon', 'Oxygen', 'Hydrogen', 'Nitrogen'],
-        correctAnswer: 'Carbon',
-      },
-      {
-        id: 3,
-        question: 3,
-        text: 'What is the atomic number of hydrogen?',
-        options: ['1', '2', '3', '4'],
-        correctAnswer: '1',
-      },
-    ],
-  },
-  {
-    id: 8,
-    title: 'Biology Quiz',
-    start: '04:00 pm',
-    end: '05:00 pm',
-    date: '16/09/2024',
-    teacher: 'Teacher H',
-    points: 55,
-    students: 30,
-    status: 'active',
-    questions: [
-      {
-        id: 1,
-        question: 1,
-        text: 'What is the basic unit of life?',
-        options: ['Cell', 'Organ', 'System', 'Tissue'],
-        correctAnswer: 'Cell',
-      },
-      {
-        id: 2,
-        question: 2,
-        text: 'What is the function of DNA?',
-        options: [
-          'Store genetic information',
-          'Transmit nerve signals',
-          'Absorb nutrients',
-          'Filter blood',
-        ],
-        correctAnswer: 'Store genetic information',
-      },
-      {
-        id: 3,
-        question: 3,
-        text: 'Which part of the plant is responsible for photosynthesis?',
-        options: ['Leaf', 'Root', 'Stem', 'Flower'],
-        correctAnswer: 'Leaf',
-      },
-    ],
-  },
-  {
-    id: 8,
-    title: 'Biology Quiz',
-    start: '04:00 pm',
-    end: '05:00 pm',
-    date: '16/09/2024',
-    teacher: 'Teacher H',
-    points: 55,
-    students: 30,
-    status: 'active',
-    questions: [
-      {
-        id: 1,
-        question: 1,
-        text: 'What is the basic unit of life?',
-        options: ['Cell', 'Organ', 'System', 'Tissue'],
-        correctAnswer: 'Cell',
-      },
-      {
-        id: 2,
-        question: 2,
-        text: 'What is the function of DNA?',
-        options: [
-          'Store genetic information',
-          'Transmit nerve signals',
-          'Absorb nutrients',
-          'Filter blood',
-        ],
-        correctAnswer: 'Store genetic information',
-      },
-      {
-        id: 3,
-        question: 3,
-        text: 'Which part of the plant is responsible for photosynthesis?',
-        options: ['Leaf', 'Root', 'Stem', 'Flower'],
-        correctAnswer: 'Leaf',
-      },
-    ],
-  },
-]);
-
-const route = useRoute();
-const quiz = ref<Quiz | null>(null);
 const currentQuestionIndex = ref<number>(0);
 const selectedOption = ref<DataObject>({});
 const answers = ref<DataObject>({});
 const isSubmitDialogOpen = ref<boolean>(false);
 
-onMounted(() => {
-  const quizId = parseInt(route.params.id as string);
-  quiz.value = quizzes.value.find((q) => q.id === quizId) || null;
+const props = defineProps({
+ quiz: {
+    type: Object as () => Quiz,
+    required: true,
+  },
+});
 
-  if (quiz.value) {
-    quiz.value.questions.forEach((q, index) => {
+onMounted( () => {
+  if (props.quiz) {
+    props.quiz.questions.forEach((q, index) => {
       selectedOption.value[`${index}`] = answers.value[index] || '';
     });
   }
+
 });
 
 const isLastQuestion = computed(
-  () => currentQuestionIndex.value === (quiz.value?.questions.length || 0) - 1
+  () => currentQuestionIndex.value === (props.quiz?.questions.length || 0) - 1
 );
 
 const isFirstQuestion = computed(() => currentQuestionIndex.value === 0);
 
+
 const goToNextQuestion = () => {
-  if (quiz.value) {
-    answers.value[currentQuestionIndex.value] =
-      selectedOption.value[`${currentQuestionIndex.value}`];
+  if (props.quiz) {
+    answers.value[currentQuestionIndex.value] = selectedOption.value[`${currentQuestionIndex.value}`];
+    // LocalStorage.set(`selectedOption_${currentQuestionIndex.value}`, answers.value[currentQuestionIndex.value]);
 
     if (!isLastQuestion.value) {
       currentQuestionIndex.value++;
-      selectedOption.value[`${currentQuestionIndex.value}`] =
-        answers.value[currentQuestionIndex.value] || '';
+      selectedOption.value[`${currentQuestionIndex.value}`] = answers.value[currentQuestionIndex.value] || '';
     }
   }
-  console.log(selectedOption.value);
 };
 
 const goToPreviousQuestion = () => {
-  if (quiz.value && currentQuestionIndex.value > 0) {
-    answers.value[currentQuestionIndex.value] =
-      selectedOption.value[`${currentQuestionIndex.value}`];
+  if (props.quiz && currentQuestionIndex.value > 0) {
+    answers.value[currentQuestionIndex.value] = selectedOption.value[`${currentQuestionIndex.value}`];
+    // LocalStorage.set(`selectedOption_${currentQuestionIndex.value}`, answers.value[currentQuestionIndex.value]);
     currentQuestionIndex.value--;
-    selectedOption.value[`${currentQuestionIndex.value}`] =
-      answers.value[currentQuestionIndex.value] || '';
+    selectedOption.value[`${currentQuestionIndex.value}`] = answers.value[currentQuestionIndex.value] || '';
   }
 };
+interface User {
+    username: string;
+    email: string;
+    password: string;
+    isTeacher: boolean;
+    role: string;
+  }
 
-const openSubmitDialog = () => {
+interface QuizResults {
+  name: User;
+  quizzes: {
+    quiz: Quiz;
+    score: number;
+    questions: Question[];
+    answer: DataObject;
+    selectedOption: DataObject;
+  }[];
+}
+const openSubmitDialog = async () => {
   const score = calculateScore();
-  localStorage.setItem('quizScore', score.toString());
-  eventBus.score = score;
-  eventBus.questions = quiz.value?.questions;
-  eventBus.answers = answers;
-  eventBus.title = quiz.value?.title;
-  eventBus.endQuiz = quiz.value?.end;
-  eventBus.startQuiz = quiz.value?.start;
-  eventBus.date = quiz.value?.date;
-  eventBus.selectedOption = selectedOption;
-  isSubmitDialogOpen.value = true;
+  const user = LocalStorage.getItem('user') as User;
+  const userEmail = user.email;
 
-  console.log(answers.value);
+  let allQuizResults = (LocalStorage.getItem('allQuizResults') || {}) as Record<string, QuizResults>;
+
+  // const getAllQuizResults = new GetAllQuizResults();
+  // let allQuizResults: QuizResults[] = await getAllQuizResults.executeAsync();
+
+  if (!allQuizResults[userEmail]) {
+    allQuizResults[userEmail] = {
+      name: {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        isTeacher: user.isTeacher,
+        role: user.role
+      },
+      quizzes: []
+    };
+  }
+
+  allQuizResults[userEmail].quizzes.push({
+    quiz: props.quiz,
+    score: score,
+    questions: props.quiz.questions,
+    answer: answers.value,
+    selectedOption: selectedOption.value
+  });
+
+  // تحديث LocalStorage
+  LocalStorage.set('allQuizResults', allQuizResults);
+
+  // let userResult = allQuizResults.find(result => result.name.username === user.username);
+
+  // if (!userResult[userEmail]) {
+  //   userResult[userEmail] = {
+  //     name: {
+  //       username: user.username,
+  //       email: user.email,
+  //       password: user.password,
+  //       isTeacher: user.isTeacher,
+  //       role: user.role
+  //     },
+  //     quizzes: []
+  //   };
+  //   allQuizResults[userEmail].push(userResult);
+  // }
+
+  // userResul.quizzes.push({
+  //   quiz: props.quiz,
+  //   score: score,
+  //   questions: props.quiz.questions,
+  //   answer: answers.value,
+  //   selectedOption: selectedOption.value
+  // });
+
+  // LocalStorage.set('allQuizResults', allQuizResults);
+
+  eventBus.score = score;
+  eventBus.questions = props.quiz?.questions;
+  eventBus.answers = answers.value;
+  eventBus.title = props.quiz?.name;
+  eventBus.endQuiz = props.quiz?.end;
+  eventBus.startQuiz = props.quiz?.start;
+  eventBus.date = props.quiz?.date;
+  eventBus.selectedOption = selectedOption.value;
+  eventBus.totalPoint = props.quiz.totalPoint;
+
+  isSubmitDialogOpen.value = true;
 };
+
 
 const calculateScore = () => {
   let score = 0;
-  if (quiz.value) {
-    quiz.value.questions.forEach((question, index) => {
-      if (selectedOption.value[`${index}`] === question.correctAnswer) {
-        score += 10;
+  if (props.quiz) {
+    props.quiz.questions.forEach((question, index) => {
+      const correctAnswer = question.options.find(opt => opt.correct)?.text;
+      if (selectedOption.value[`${index}`] === correctAnswer) {
+        score += question.point;
       }
     });
   }
@@ -540,5 +280,3 @@ const calculateScore = () => {
   return score;
 };
 </script>
-
-<style scoped></style>

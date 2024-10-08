@@ -9,6 +9,7 @@
       no-caps
       align="left"
       dense
+      borderless
     >
       <q-route-tab
         v-for="ele in tabsHeader"
@@ -18,6 +19,7 @@
         :to="ele.to"
         :icon="ele.icon"
         class="q-ml-md br-8"
+        borderless
       />
     </q-tabs>
 
@@ -26,11 +28,11 @@
         v-model="searchQuery"
         placeholder="Search"
         class="q-mr-md"
-        filled
         flat
         dense
         clearable
         debounce="300"
+        borderless
       >
         <template v-slot:prepend>
           <q-icon name="search" />
@@ -75,7 +77,7 @@
             :quiz="quiz"
             :index="i"
             @delete-quiz="handleDeleteQuiz"
-            @update-quiz="handleUpdateQuiz"
+
           />
         </div>
       </q-tab-panel>
@@ -85,6 +87,7 @@
             v-for="(quiz,i) in displayedQuizzes"
             :key="i"
             :quiz="quiz"
+             :index="i"
           />
         </div>
       </q-tab-panel>
@@ -102,7 +105,7 @@
       />
     </div>
 
-    <create-quiz-dialog v-model="showDialog" @add-quiz="addQuiz" />
+    <create-quiz-dialog v-model="showDialog" @add-quiz="addQuiz" :quizzes="quizzes"   @update-quiz="handleUpdateQuiz"/>
   </q-page>
 </template>
 
@@ -113,13 +116,15 @@ import ResulteComp from 'src/components/teacher/result/ResultComp.vue';
 import { ref, computed, onMounted } from 'vue';
 import CreateQuizDialog from 'src/components/teacher/quiz/CreateQuizDialog.vue';
 import GetQuizzesFun from 'src/functions/GetQuizzesFun';
-import { LocalStorage } from 'quasar';
+import UpdateQuizzes from 'src/functions/UpdateQuizzes';
+import DeleteQuizzes from 'src/functions/DeletQuizzes';
+import CreateQuizzes from 'src/functions/CreateQuizzes';
 
 const showDialog = ref(false);
 const tab = ref<string>('quize');
 const searchQuery = ref<string>('');
 const visibleCount = ref<number>(6);
-
+  // const currentQuiz = ref(null);
 const quizzes = ref<Quiz[]>([]);
 
 interface Question {
@@ -129,7 +134,7 @@ point:number;
 options: {
   text: string;
   correct: boolean;
-};
+}[];
 
 }
 
@@ -145,9 +150,11 @@ students: number;
 start: string;
 end: string;
 status: string;
-totalQuestion:number;
+totalQuestion: number;
+totalPoint:number
 questions:Question[]
 }
+
 
 
 
@@ -176,35 +183,38 @@ const loadMore = () => {
 
 };
 
-const handleDeleteQuiz = (index: number) => {
-  // const deletedQuiz = quizzes.value[index];
-  // quizzes.value.splice(index, 1);
+const handleDeleteQuiz = async(index: number) => {
+  const deleteQuizzes = new DeleteQuizzes();
+  const storedQuizzes = await deleteQuizzes.executeAsync({ quizzes: quizzes.value });
 
-  const storedQuizzes = (LocalStorage.getItem('quizzes') || []) as Quiz[];
-  storedQuizzes.splice(index, 1);
-  LocalStorage.set('quizzes', storedQuizzes);
 
-  quizzes.value.splice(index, 1);
+  if (storedQuizzes.length > 0) {
+    storedQuizzes.splice(index, 1);
+    await deleteQuizzes.executeAsync({ quizzes: storedQuizzes });
+    quizzes.value = storedQuizzes;
+  }
 
 };
 
-const handleUpdateQuiz = (updatedQuiz: { quiz: Quiz; index: number }) => {
+const handleUpdateQuiz =async  (updatedQuiz: { quiz: Quiz; index: number }) => {
   const index = updatedQuiz.index;
   if (index !== -1) {
     quizzes.value[index] = { ...quizzes.value[index], ...updatedQuiz.quiz };
-    LocalStorage.set('quizzes', quizzes.value);
+    const updateQuizzes = new UpdateQuizzes();
+    await updateQuizzes.executeAsync({ quizzes: quizzes.value });
   }
 };
 
-const addQuiz = (newQuiz: Quiz) => {
+const addQuiz = async(newQuiz: Quiz) => {
   quizzes.value.unshift(newQuiz);
-
+  const createQuizzes = new CreateQuizzes();
+    await createQuizzes.executeAsync({ quizzes: quizzes.value });
 };
 
 const tabsHeader = ref([
   {
     name: 'quize',
-    label: 'Quize',
+    label: 'Quiz',
     to: RoutesPaths.QUIZ_TEACHER,
     icon: 'group',
   },

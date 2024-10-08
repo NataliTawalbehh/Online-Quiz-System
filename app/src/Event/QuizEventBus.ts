@@ -10,6 +10,9 @@ endQuiz:'',
 startQuiz:'',
 date:'',
 selectedOption:[],
+name:'',
+totalPoint:0
+
 });
 
 export default eventBus;

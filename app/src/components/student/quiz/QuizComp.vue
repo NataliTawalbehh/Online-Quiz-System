@@ -6,17 +6,17 @@
           <div>
             <div class="quiz-title text-h5">
               <q-icon name="score" size="30px" />
-              {{ quiz.title }}
+              {{ quiz.name }}
             </div>
             <span>{{ quiz.date }}</span>
           </div>
           <div class="column text-caption text-grey">
-            <q-badge text-color="green" color="white" class="q-mr-sm"
-              >Start {{ quiz.start }}</q-badge
-            >
-            <q-badge text-color="red" color="white" class="q-mr-sm"
-              >End {{ quiz.end }}</q-badge
-            >
+            <q-badge text-color="green" color="white" class="q-mr-sm">
+              Start {{ quiz.start }}
+            </q-badge>
+            <q-badge text-color="red" color="white" class="q-mr-sm">
+              End {{ quiz.end }}
+            </q-badge>
           </div>
         </div>
 
@@ -24,9 +24,9 @@
           <div class="text-body1">
             {{ quiz.teacher }}
             <br />
-            <span>{{ quiz.points }} Points</span>
+            <span>{{ quiz.totalPoint }} Points</span>
             <br />
-            <span>{{ quiz.students }} Students</span>
+            <span>{{ quiz.description }} Students</span>
           </div>
         </div>
       </q-card-section>
@@ -34,11 +34,10 @@
       <q-card-actions align="right" class="q-mr-sm">
         <q-btn
           label="Attempt"
-          :disable="quiz.status !== 'active'"
           class="w-118 br-8 text-primary"
           no-caps
           outline
-          @click="handleQuizClick(quiz)"
+           @click="handleQuizClick(index, quiz.name)"
         />
       </q-card-actions>
     </q-card>
@@ -46,46 +45,67 @@
 </template>
 
 <script setup lang="ts">
-import { PropType } from 'vue';
+// import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 defineProps({
   quiz: {
-    type: Object as PropType<Quiz>,
-    default: {} as Quiz,
+    type: Object as () => Quiz,
+    required: true,
   },
-
+  index: {
+    type: Number,
+    required: true,
+  },
 });
 
 interface Question {
-  id: number;
+question:string;
+multipleChoices: boolean;
+point:number;
+options: {
   text: string;
-  options: string[];
-  correctAnswer: string;
+  correct: boolean;
+}[];
+
 }
+
+
 interface Quiz {
-  id: number;
-  title: string;
-  start: string;
-  end: string;
-  date: string;
-  teacher: string;
-  points: number;
-  students: number;
-  status: string;
-  questions: Question[];
+id: number;
+date: string;
+description: string;
+name: string;
+teacher: string;
+points: number;
+students: number;
+start: string;
+end: string;
+status: string;
+totalQuestion: number;
+totalPoint:number
+questions:Question[]
 }
 
+const handleQuizClick = (index: number, quizName: string) => {
+  console.log('Quiz Index: ', index);
+  console.log('Quiz Name:', quizName);
 
-const handleQuizClick = (quiz: Quiz) => {
-  router.push({ path: `/student/quize/${quiz.id}` });
+  if (index !== undefined) {
+    router.push({
+      path: `/student/quiz/${index}`,
+      query: { name: quizName }
+    });
+  } else {
+    console.error('Quiz index is undefined');
+  }
 };
+
+
 </script>
 
 <style scoped>
-
-
 .q-card {
   max-width: 100%;
   transition: transform 0.3s ease;

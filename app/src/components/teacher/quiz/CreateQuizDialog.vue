@@ -1,6 +1,6 @@
 <template>
-  <q-dialog>
-    <q-card class="w-900" align="center">
+  <q-dialog >
+    <q-card class="w-900 hide-scrollbar" align="center">
       <q-card-section class="row justify-end">
         <q-btn
           flat
@@ -17,57 +17,43 @@
       </q-card-section>
 
       <q-card-section class="q-px-xl row items-center">
-        <div  class="q-pa-sm col-12" >
-         <q-input v-model="quizDate" outlined dense class="q-mb-md" >
-          <template v-slot:prepend>
-            <q-icon name="event" class="cursor-pointer">
-              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-date v-model="quizDate" mask="YYYY-MM-DD HH:mm">
-              <div class="row items-center justify-end">
-                <q-btn v-close-popup label="Close" color="primary" flat />
-              </div>
-              </q-date>
-              </q-popup-proxy>
-           </q-icon>
-         </template>
-
-      <template v-slot:append>
-        <q-icon name="access_time" class="cursor-pointer">
-          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-            <q-time v-model="startTime" mask="YYYY-MM-DD HH:mm" format24h>
-              <div class="row items-center justify-end">
-                <q-btn v-close-popup label="Close" color="primary" flat />
-              </div>
-            </q-time>
-          </q-popup-proxy>
-        </q-icon>
-      </template>
-    </q-input>
-  </div>
-
-
-        <!-- <div class="q-pa-sm col-12">
-          <q-input
-            v-model="quizDate"
-            label="Date/Time"
-            outlined
-            class="q-mb-md"
-            dense
-          >
-            <template v-slot:append>
-              <q-icon name="event" />
+        <div class="q-pa-sm col-12">
+          <q-input v-model="quizDate" outlined dense class="q-mb-md">
+            <template v-slot:prepend>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
+                  <q-date v-model="quizeDate" mask="YYYY-MM-DD">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
             </template>
 
-            <q-popup-proxy
-              ref="qDateProxy"
-              transition-show="scale"
-              transition-hide="scale"
-            >
-              <q-date v-model="quizDate" mask="YYYY-MM-DD" />
-              <q-time v-model="time" format="24hr" />
-            </q-popup-proxy>
+            <template v-slot:append>
+              <q-icon name="access_time" class="cursor-pointer">
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
+                  <q-time v-model="startTime" mask="HH:mmA" format12h>
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-time>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
           </q-input>
-        </div> -->
+
+        </div>
+
         <div class="q-pa-sm col-12">
           <q-input
             v-model="quizName"
@@ -95,21 +81,21 @@
           :key="index"
           class="q-mb-md col-12 row"
         >
-          <div  class="row q-pa-sm col-12">
+          <div class="row q-pa-sm col-12">
             <q-input
               v-model="question.question"
               :label="'Question ' + (index + 1)"
               outlined
               dense
-               class="q-mb-md col-8"
+              class="q-mb-md col-8"
             />
             <q-input
-             v-model.number="question.point"
-             label="Points"
-             outlined
-             dense
-             type="number"
-             class="q-mb-md col-4"
+              v-model.number="question.point"
+              label="Points"
+              outlined
+              dense
+              type="number"
+              class="q-mb-md col-4"
             />
           </div>
           <div class="q-mb-md col-12 row justify-end">
@@ -184,21 +170,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { LocalStorage } from 'quasar';
+import { computed, ref } from 'vue';
+import { date} from 'quasar';
 
-const quizDate = ref<string>('');
+import { defineEmits } from 'vue';
+
+const emit = defineEmits(['add-quiz']);
 const quizName = ref<string>('');
 const quizDescription = ref<string>('');
 const startTime = ref<string>('');
 const showDialog = ref<boolean>(false);
-const date = ref<string>('');
+const quizeDate = ref<string>('');
+
+
+
+
+const totalQuestion = computed(() => questions.value.length);
+const totalPoint = computed(() =>
+  questions.value.reduce((sum, q) => sum + q.point, 0)
+);
+
+const calculateEndTime = (startTime: string) => {
+  const startDateTime = date.extractDate(
+    `${quizeDate.value} ${startTime}`,
+    'YYYY-MM-DD HH:mma'
+  );
+  console.log(startDateTime);
+
+  const end = new Date(startDateTime.getTime() + 45 * 60 * 1000);
+  return end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const quizDate = computed(() => {
+  return `${quizeDate.value} ${startTime.value}`;
+});
 
 const questions = ref([
   {
     question: '',
     multipleChoices: false,
-    point:0,
+    point: 0,
     options: [
       { text: '', correct: false },
       { text: '', correct: false },
@@ -206,13 +217,38 @@ const questions = ref([
       { text: '', correct: false },
     ],
   },
-
 ]);
+
+interface Question {
+  question: string;
+  multipleChoices: boolean;
+  point: number;
+  options: {
+    text: string;
+    correct: boolean;
+  };
+}
+
+interface Quiz {
+  id: number;
+  date: string;
+  description: string;
+  name: string;
+  teacher: string;
+  points: number;
+  students: number;
+  start: string;
+  end: string;
+  status: string;
+  totalQuestion: number;
+  totalPoint: number;
+  questions: Question[];
+}
 
 const addQuestion = () => {
   questions.value.push({
     question: '',
-    point:0,
+    point: 0,
     multipleChoices: false,
     options: [
       { text: '', correct: false },
@@ -223,30 +259,33 @@ const addQuestion = () => {
   });
 };
 
-const createQuiz = () => {
-  console.log('Quiz Created:', {
-    date: quizDate.value,
-    name: quizName.value,
-    description: quizDescription.value,
-    startTime: startTime.value,
-    questions: questions.value,
-  });
+
+const createQuiz = async () => {
+  const endTime = calculateEndTime(startTime.value);
 
   const newQuiz = {
-    date: quizDate.value,
+    date: quizeDate.value,
     name: quizName.value,
     description: quizDescription.value,
-    startTime: startTime.value,
+    start: startTime.value,
+    end: endTime,
+    totalQuestion: totalQuestion.value,
+    totalPoint: totalPoint.value,
+
     questions: questions.value,
   };
+  emit('add-quiz', newQuiz);
 
-  const existingQuizzes = (LocalStorage.getItem('quizzes') || []) as [];
+  // const getQuizzesFun = new GetQuizzesFun();
+  // const existingQuizzes = await getQuizzesFun.executeAsync();
 
-  LocalStorage.set('quizzes', [...existingQuizzes, newQuiz]);
+  // const updatedQuizzes = [...existingQuizzes, newQuiz];
 
+  // LocalStorage.set('quizzes', updatedQuizzes);
 
   closeDialog();
 };
+
 
 const closeDialog = () => {
   showDialog.value = false;
@@ -258,3 +297,7 @@ const deleteQuestion = (index: number) => {
 </script>
 
 <style scoped></style>
+
+
+
+

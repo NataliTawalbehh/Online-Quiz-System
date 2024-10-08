@@ -6,7 +6,7 @@
           <div>
             <div class="quiz-title text-h5">
               <q-icon name="score" size="30px" />
-              {{ quiz.title }}
+              {{ quiz.name }}
             </div>
             <span>{{ quiz.date }}</span>
           </div>
@@ -49,27 +49,32 @@ defineProps({
 });
 
 interface Question {
-  id: number;
+question:string;
+multipleChoices: boolean;
+point:number;
+options: {
   text: string;
-  options: string[];
-  correctAnswer: string;
+  correct: boolean;
+}[];
+
 }
+
+
 interface Quiz {
-  id: number;
-  title: string;
-  start: string;
-  end: string;
-  date: string;
-  teacher: string;
-  points: number;
-  students: number;
-  status: string;
-  questions: Question[];
+id: number;
+date: string;
+description: string;
+name: string;
+teacher: string;
+points: number;
+students: number;
+start: string;
+end: string;
+status: string;
+totalQuestion: number;
+totalPoint:number
+questions:Question[]
 }
-
-
-
-
 </script>
 
 <style scoped>

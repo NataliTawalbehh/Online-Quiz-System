@@ -53,14 +53,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { LocalStorage } from 'quasar';
 
 const username = ref<{ username: string; email: string; role: string } | null>(null);
-
 onMounted(() => {
-  const storedUser = localStorage.getItem('user');
+  const storedUser = LocalStorage.getItem('user');
   if (storedUser) {
-    username.value = JSON.parse(storedUser);
+    username.value = storedUser as { username: string; email: string; role: string };
   }
+
 });
 
 const goToWebsite = () => {

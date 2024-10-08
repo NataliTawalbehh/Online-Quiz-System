@@ -1,6 +1,6 @@
 <template>
-  <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 q-px-md q-mt-md" @click="navigateToGrade(quiz)">
-    <q-card class="br-8"  >
+  <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 q-px-md q-mt-md" @click="navigateToGrade(index ,quiz.name)">
+    <q-card class="br-8">
       <q-card-section>
         <div class="row justify-between items-center">
           <div>
@@ -22,26 +22,24 @@
 
         <div class="q-mt-md" style="color: #262b43">
           <div class="text-body1">
-            {{ quiz.description }} Total Questions
+            {{ quiz.totalQuestion }} Total Questions
             <br />
-            <span>{{ quiz.description }} Points</span>
+            <span>{{ quiz.totalPoint }} Points</span>
             <br />
             <span>{{ quiz.description }} Students</span>
           </div>
         </div>
       </q-card-section>
-
     </q-card>
   </div>
-
 </template>
 
 <script setup lang="ts">
 import { PropType } from 'vue';
 import { useRouter } from 'vue-router';
-import eventBus from '../../../Event/QuizEventBus';
 
 const router = useRouter();
+
 defineProps({
   quiz: {
     type: Object as PropType<Quiz>,
@@ -51,44 +49,42 @@ defineProps({
     type: Array as PropType<Quiz[]>,
     default: () => [],
   },
+  index: {
+    type: Number,
+    required: true,
+  },
 });
 
-
 interface Question {
-
-question:string;
-multipleChoices: boolean;
-point:number;
-options: {
-  text: string;
-  correct: boolean;
-};
-
+  question: string;
+  multipleChoices: boolean;
+  point: number;
+  options: {
+    text: string;
+    correct: boolean;
+  }[];
 }
-
 
 interface Quiz {
-id: number;
-date: string;
-description: string;
-name: string;
-teacher: string;
-points: number;
-students: number;
-start: string;
-end: string;
-status: string;
-totalQuestion:number;
-questions:Question[]
+  id: number;
+  date: string;
+  description: string;
+  name: string;
+  teacher: string;
+  points: number;
+  students: number;
+  start: string;
+  end: string;
+  status: string;
+  totalQuestion: number;
+  totalPoint: number;
+  questions: Question[];
 }
 
+const navigateToGrade = (index: number, quizName: string) => {
+  console.log('Navigating to result for quiz index:', index);
+  router.push({ path: `/teacher/result/${index}`, query: { name: quizName } });
 
-const navigateToGrade = (quiz: Quiz) => {
-  eventBus.title = quiz.name;
-  eventBus.endQuiz = quiz.end;
-  eventBus.startQuiz = quiz.start;
-  eventBus.date = quiz.date;
-  router.push({ path: `/teacher/quiz/${quiz.id}` });
 };
 </script>
 

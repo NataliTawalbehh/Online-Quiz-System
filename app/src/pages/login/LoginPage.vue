@@ -11,7 +11,9 @@
             />
             <span class="q-px-sm"> Online Quiz System </span>
           </div>
-          <div class="text-subtitle2 full-width q-mt-md">Welcome to Materialize! 👋</div>
+          <div class="text-subtitle2 full-width q-mt-md">
+            Welcome to Materialize! 👋
+          </div>
           <div class="text-caption full-width q-mt-sm">
             Please sign-in to your account and start the adventure
           </div>
@@ -48,12 +50,7 @@
               class="text-black"
             />
 
-            <q-btn
-              flat
-              no-caps
-              label="Forgot Password?"
-              color="primary"
-            />
+            <q-btn flat no-caps label="Forgot Password?" color="primary" />
           </div>
           <div class="full-width">
             <q-btn
@@ -63,7 +60,6 @@
               color="primary"
               class="full-width q-mt-md"
               type="submit"
-
             />
           </div>
         </q-card-section>
@@ -76,8 +72,6 @@
             label="Create an account"
             color="primary"
             @click="showRegisterDialog = true"
-
-
           />
         </q-card-section>
       </q-form>
@@ -100,7 +94,7 @@
             Create Account in
             <span style="color: #666cff">Online Quiz System</span>
           </div>
-          <div class="text-body1 q-mt-sm"  style="font-size: 15px;">
+          <div class="text-body1 q-mt-sm" style="font-size: 15px">
             Updating user details will receive a privacy audit.
           </div>
         </q-card-section>
@@ -165,10 +159,18 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { LocalStorage } from 'quasar';
+
+interface User {
+  username: string;
+  email: string;
+  password: string;
+  isTeacher: boolean;
+  role: 'student' | 'teacher';
+}
 
 const router = useRouter();
 const showRegisterDialog = ref<boolean>(false);
-// const showForgotPasswordDialog = ref<boolean>(false);
 const email = ref<string>('');
 const password = ref<string>('');
 const rememberMe = ref<boolean>(false);
@@ -177,43 +179,57 @@ const confirmPassword = ref<string>('');
 const isTeacher = ref<boolean>(false);
 
 const onLogin = () => {
-  console.log('Login with', { email: email.value, password: password.value });
+  const users: User[] = LocalStorage.getItem('users') || [];
 
-  const userRole = isTeacher.value ? 'Teachers' : 'Students';
+  const user = users.find((u: User) => u.email === email.value && u.password === password.value);
 
-  const userData = {
-    username: username.value,
-    email: email.value,
-    role: userRole,
-  };
+  if (user) {
+    const userRole = user.isTeacher ? 'Teachers' : 'Students';
+    LocalStorage.set('user', user);
 
-  localStorage.setItem('user', JSON.stringify(userData));
-
-  if (userRole === 'Students') {
-    router.push({ path: '/student/quize' });
-  } else if (userRole === 'Teachers') {
-    router.push({ path: '/teacher/quiz' });
+    if (userRole === 'Students') {
+      router.push({ path: '/student/quize' });
+    } else if (userRole === 'Teachers') {
+      router.push({ path: '/teacher/quiz' });
+    }
+  } else {
+    console.log('Invalid credentials');
   }
 };
 
 const onRegister = (): void => {
-  console.log('Register with', {
+  const users: User[] = LocalStorage.getItem('users') || [];
+
+
+  const existingUser = users.find((u: User) => u.email === email.value);
+
+  if (existingUser) {
+    console.log('User already exists');
+    return;
+  }
+
+
+  const newUser: User = {
     username: username.value,
     email: email.value,
+    password: password.value,
     isTeacher: isTeacher.value,
-  });
-  showRegisterDialog.value = false;
+    role: isTeacher.value ? 'teacher' : 'student',
+  };
+
+  users.push(newUser);
+  LocalStorage.set('users', users);
+
+  console.log('User registered:', newUser);
+  showRegisterDialog.value = false; 
 };
 </script>
 
 <style scoped>
-
 .custom-input {
   width: 364px;
   height: 48px;
   gap: 0px;
   opacity: 1;
 }
-
-
 </style>

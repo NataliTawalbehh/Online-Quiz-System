@@ -28,23 +28,18 @@ interface Quiz {
   questions: Question[];
 }
 
-export default class GetQuizzesFun implements FuncAsync<DataObject, Quiz[]> {
+export default class CreateQuizzes implements FuncAsync<DataObject, Quiz[]> {
   async executeAsync(options?: DataObject): Promise<Quiz[]> {
     try {
-      if (!options) {
-        options = {};
-      }
-
-      const quizzesString = (LocalStorage.getItem('quizzes') || []) as Quiz[];
-
-      if (quizzesString) {
-        const quizzes = quizzesString;
-        console.log('Parsed quizzes:', quizzes);
-        return quizzes;
-      } else {
-        console.log('There are no quizzes in LocalStorage');
+      if (!options || !Array.isArray(options.quizzes)) {
+        console.error('No quizzes provided to Create or quizzes is not an array.');
         return [];
       }
+
+      LocalStorage.set('quizzes', options.quizzes);
+
+      console.log('Quizzes Create successfully:', options.quizzes);
+      return options.quizzes;
     } catch (error) {
       // Log any errors that occur during execution
       console.error('Error - ', error);
