@@ -172,7 +172,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { date} from 'quasar';
-
+// import {Quiz} from 'src/models/QuizzesModel'
 import { defineEmits } from 'vue';
 
 const emit = defineEmits(['add-quiz']);
@@ -219,31 +219,6 @@ const questions = ref([
   },
 ]);
 
-interface Question {
-  question: string;
-  multipleChoices: boolean;
-  point: number;
-  options: {
-    text: string;
-    correct: boolean;
-  };
-}
-
-interface Quiz {
-  id: number;
-  date: string;
-  description: string;
-  name: string;
-  teacher: string;
-  points: number;
-  students: number;
-  start: string;
-  end: string;
-  status: string;
-  totalQuestion: number;
-  totalPoint: number;
-  questions: Question[];
-}
 
 const addQuestion = () => {
   questions.value.push({

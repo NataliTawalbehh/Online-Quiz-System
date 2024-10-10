@@ -26,11 +26,11 @@
         v-model="searchQuery"
         placeholder="Search"
         class="q-mr-md"
-        filled
         flat
         dense
         clearable
         debounce="300"
+        borderless
       >
         <template v-slot:prepend>
           <q-icon name="search" />
@@ -82,36 +82,11 @@ import QuizComp from 'src/components/student/quiz/QuizComp.vue';
 import ResulteComp from 'src/components/student/result/ResulteComp.vue';
 import { ref, computed, onMounted } from 'vue';
 import GetQuizzesFun from 'src/functions/GetQuizzesFun';
+import {Quiz} from 'src/models/QuizzesModel'
+
 const tab = ref<string>('quize');
 const searchQuery = ref<string>('');
 
-interface Question {
-question:string;
-multipleChoices: boolean;
-point:number;
-options: {
-  text: string;
-  correct: boolean;
-}[];
-
-}
-
-
-interface Quiz {
-id: number;
-date: string;
-description: string;
-name: string;
-teacher: string;//local storage
-points: number;
-students: number;
-start: string;
-end: string;
-status: string;
-totalQuestion: number;
-totalPoint:number
-questions:Question[]
-}
 
 const quizzes = ref<Quiz[]>([]);
 

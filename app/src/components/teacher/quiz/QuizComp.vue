@@ -5,7 +5,7 @@
         <div class="row justify-between items-center">
           <div>
             <div class="quiz-title text-h5">
-              <q-icon name="score" size="30px" />
+              <q-icon name="score" size="30px" color="yellow"/>
               {{ quiz.name }}
             </div>
             <span>{{ quiz.date }}</span>
@@ -31,22 +31,6 @@
             <span> {{ quiz.description }} Students</span>
           </div>
         </div>
-
-        <!-- Show options for the quiz -->
-        <!-- <div class="q-mt-md">
-          <div v-if="quiz.questions">
-            <ul>
-              <li v-for="(question, index) in quiz.questions" :key="index">
-                <strong>{{ question.question }}:</strong>
-                <ul>
-                  <li v-for="(option, optIndex) in question.options" :key="optIndex">
-                    {{ option.text }} <span v-if="option.correct">(Correct)</span>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-        </div> -->
       </q-card-section>
 
       <q-card-actions align="right" class="q-mr-sm">
@@ -69,8 +53,10 @@
       </q-card-actions>
     </q-card>
 
-     <!-- Edit Quiz Dialog -->
-     <q-dialog v-model="showDialog" persistent>
+
+  </div>
+   <!-- Edit Quiz Dialog -->
+   <q-dialog v-model="showDialog" persistent>
       <q-card class="w-900 hide-scrollbar" align="center">
         <q-card-section class="row justify-end">
           <q-btn
@@ -89,23 +75,39 @@
 
         <q-card-section class="q-px-xl row items-center">
           <div class="q-pa-sm col-12">
-            <q-input v-model="editQuiz.date" outlined dense class="q-mb-md">
-              <template v-slot:prepend>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy
-                    cover
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date v-model="quizeDate" mask="YYYY-MM-DD">
-                      <div class="row items-center justify-end">
-                        <q-btn v-close-popup label="Close" color="primary" flat />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
+            <q-input v-model="quizDate" outlined dense class="q-mb-md">
+            <template v-slot:prepend>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
+                  <q-date v-model="quizeDate" mask="YYYY-MM-DD">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+
+            <template v-slot:append>
+              <q-icon name="access_time" class="cursor-pointer">
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
+                  <q-time v-model="startTime" mask="HH:mmA" format12h>
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-time>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
           </div>
 
           <div class="q-pa-sm col-12">
@@ -128,7 +130,7 @@
             />
           </div>
 
-          <!-- Question section remains the same -->
+
           <div
             v-for="(question, index) in editQuiz.questions"
             :key="index"
@@ -219,16 +221,13 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-
-  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, defineProps, defineEmits, computed } from 'vue';
-// import CreateQuizDialog from './CreateQuizDialog.vue';
+import {Quiz} from 'src/models/QuizzesModel'
 
-const quizName = ref<string>('');
-const quizDescription = ref<string>('');
+
 const startTime = ref<string>('');
 const quizeDate = ref<string>('');
 
@@ -236,31 +235,6 @@ const quizDate = computed(() => {
   return `${quizeDate.value} ${startTime.value}`;
 });
 
-interface Question {
-  question: string;
-  multipleChoices: boolean;
-  point: number;
-  options: {
-    text: string;
-    correct: boolean;
-  }[];
-}
-
-interface Quiz {
-  id: number;
-  date: string;
-  description: string;
-  name: string;
-  teacher: string;
-  points: number;
-  students: number;
-  start: string;
-  end: string;
-  status: string;
-  totalQuestion: number;
-  totalPoint:number
-  questions: Question[];
-}
 
 const props = defineProps({
   quiz: {
@@ -282,12 +256,10 @@ const editQuiz = ref<Quiz>({ ...props.quiz });
 watch(
   () => props.quiz,
   (newQuiz) => {
-    editQuiz.value = { ...newQuiz };
-    console.log(props.index);
-    console.log(props.quiz);
-  }
+    editQuiz.value = { ...newQuiz };  // تأكد من تحديث editQuiz بالقيم الجديدة
+  },
+  { immediate: true } // التأكد من أن المراقب يتم تشغيله عند أول تحميل.
 );
-
 const questions = ref([
   {
     question: '',
@@ -322,11 +294,8 @@ const openEditDialog = () => {
 };
 
 const saveEditQuiz = () => {
-  console.log('Updated Quiz:', {
-    quiz: { ...editQuiz.value },
-    index: props.index,
-  });
   emit('update-quiz', { quiz: { ...editQuiz.value }, index: props.index });
+
   closeEditDialog();
 };
 
@@ -344,27 +313,5 @@ const deleteQuestion = (index: number) => {
 </script>
 
 <style scoped>
-.q-card {
-  max-width: 100%;
-  transition: transform 0.3s ease;
-}
 
-.q-card-section img {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-}
-
-.q-btn {
-  width: 100%;
-  max-width: 200px;
-  font-size: 14px;
-}
-
-@media (min-width: 1440px) {
-  .q-btn {
-    max-width: 118px;
-    font-size: 16px;
-  }
-}
 </style>

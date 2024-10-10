@@ -77,7 +77,7 @@
             :quiz="quiz"
             :index="i"
             @delete-quiz="handleDeleteQuiz"
-
+            @update-quiz="handleUpdateQuiz"
           />
         </div>
       </q-tab-panel>
@@ -119,43 +119,13 @@ import GetQuizzesFun from 'src/functions/GetQuizzesFun';
 import UpdateQuizzes from 'src/functions/UpdateQuizzes';
 import DeleteQuizzes from 'src/functions/DeletQuizzes';
 import CreateQuizzes from 'src/functions/CreateQuizzes';
+import {Quiz} from 'src/models/QuizzesModel'
 
 const showDialog = ref(false);
 const tab = ref<string>('quize');
 const searchQuery = ref<string>('');
 const visibleCount = ref<number>(6);
-  // const currentQuiz = ref(null);
 const quizzes = ref<Quiz[]>([]);
-
-interface Question {
-question:string;
-multipleChoices: boolean;
-point:number;
-options: {
-  text: string;
-  correct: boolean;
-}[];
-
-}
-
-
-interface Quiz {
-id: number;
-date: string;
-description: string;
-name: string;
-teacher: string;
-points: number;
-students: number;
-start: string;
-end: string;
-status: string;
-totalQuestion: number;
-totalPoint:number
-questions:Question[]
-}
-
-
 
 
 onMounted(async () => {

@@ -26,8 +26,25 @@
       </div>
     </div>
 
+    <div class="q-mx-md q-mt-lg row items-center justify-between">
+      <q-input
+        v-model="searchQuery"
+        placeholder="Search"
+        class="q-mr-md"
+        flat
+        dense
+        clearable
+        debounce="300"
+        borderless
+      >
+        <template v-slot:prepend>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </div>
+
     <div class="q-pa-md">
-      <q-table
+     <q-table
         flat
         bordered
         :rows="filteredRows"
@@ -35,7 +52,20 @@
         row-key="email"
         hide-bottom
         @row-click="handleRowClick"
-      />
+      >
+        <template v-slot:body-cell-score="props">
+          <div class="row items-center q-gutter-sm">
+            <q-linear-progress
+              :value="props.row.score / props.row.totalPoints"
+              color="blue"
+              track-color="light-grey"
+              size="8px"
+              style="width: 100px"
+            />
+            <div>{{ props.row.score }}/{{ props.row.totalPoints }}</div>
+          </div>
+        </template>
+      </q-table>
     </div>
   </q-page>
 </template>
@@ -45,18 +75,19 @@ import { computed, ref, onMounted } from 'vue';
 import TableColumn from 'src/models/TableColumn';
 import { useRoute, useRouter } from 'vue-router';
 import { LocalStorage } from 'quasar';
-import DataObject from 'src/models/DataObject';
+import {QuizResults, Question} from 'src/models/Test';
 
 const route = useRoute();
 const quizName = route.query.name as string;
-const students = ref<QuizResults[]>([]);
+const students = ref<any[]>([]);
 const quizDate = ref('');
 const quizStart = ref('');
 const quizEnd = ref('');
 const questions = ref<Question[]>([]);
 const router = useRouter();
+const searchQuery = ref<string>('');
 
-// Define the columns for the table
+
 const columns = ref<TableColumn[]>([
   {
     name: 'username',
@@ -64,54 +95,11 @@ const columns = ref<TableColumn[]>([
     field: 'name',
     align: 'left',
     style: 'width:500px',
+
   },
   { name: 'score', label: 'Score', field: 'score', align: 'left' },
 ]);
 
-interface Question {
-  question: string;
-  multipleChoices: boolean;
-  point: number;
-  options: {
-    text: string;
-    correct: boolean;
-  }[];
-}
-
-interface Quiz {
-  id: number;
-  date: string;
-  description: string;
-  name: string;
-  teacher: string;
-  points: number;
-  students: number;
-  start: string;
-  end: string;
-  status: string;
-  totalQuestion: number;
-  totalPoint: number;
-  questions: Question[];
-}
-
-interface User {
-    username: string;
-    email: string;
-    password: string;
-    isTeacher: boolean;
-    role: string;
-}
-
-interface QuizResults {
-  name: User;
-  quizzes: {
-    quiz: Quiz;
-    score: number;
-    questions: Question[];
-    answer: DataObject;
-    selectedOption: DataObject;
-  }[];
-}
 
 onMounted(() => {
   const localStorageData = (LocalStorage.getItem('allQuizResults') || {}) as Record<string, QuizResults>;
@@ -121,12 +109,13 @@ onMounted(() => {
     const student = localStorageData[email];
     const quizzes = student.quizzes || [];
 
-    const quiz = quizzes.find((quiz: any) => quiz.quiz.name === quizName);
+    const quiz = quizzes.find((quiz) => quiz.quiz.name === quizName);
     if (quiz) {
       students.value.push({
-        name: student.name.username,  // Assign the full User object
+        name: student.name.username,
         score: quiz.score,
-        email: email,        // Store email for future reference
+        email: email,
+        totalPoints: quiz.quiz.totalPoint,
       });
 
       quizDate.value = quiz.quiz.date;
@@ -137,29 +126,32 @@ onMounted(() => {
   }
 });
 
-
-
-// Filtered rows based on search query
 const filteredRows = computed(() => {
-  return students.value;
+  if (!searchQuery.value) {
+    return students.value; // If no search query, return all students
+  }
+
+  const query = searchQuery.value.toLowerCase();
+  return students.value.filter(student => {
+    return student.name.toLowerCase().includes(query) || student.email.toLowerCase().includes(query);
+  });
 });
+const handleRowClick = (evt: Event, row: { email: string; name: string }) => {
+  const { email, name } = row;
 
-// تعديل دالة handleRowClick هنا لتستقبل الصف الذي تم النقر عليه
-const handleRowClick = (row: any) => {
-  const quizDetails = {
-    username: row.name,  // استخدم الاسم من الصف
-    score: row.score,    // استخدم الدرجة من الصف
-    quizName: quizName,
-    end: quizEnd.value,
-    start: quizStart.value,
-    questions: JSON.stringify(questions.value),
-  };
-
-  console.log(quizDetails);
-  router.push({ path: '/score_result', query: quizDetails });
+  console.log('Email:', email);
+  console.log('Username:', name);
+  console.log('name:', quizName);
+  router.push({
+    path: '/score_result',
+    query: {
+      email: email,
+      username: name,
+      name:quizName,
+    },
+  });
 };
 </script>
 
 <style>
-/* يمكنك إضافة أنماط مخصصة هنا */
 </style>

@@ -1,72 +1,160 @@
 <template>
-  <q-page>
-    <q-card>
+  <q-page class="q-pa-md">
+    <q-card flat bordered class="q-mb-md br-8">
       <q-card-section>
-        <div class="text-h6">{{ quizName }}</div>
-        <div class="text-caption text-grey-8 q-mt-xs">{{ quizDate }}</div>
-        <q-badge text-color="green" color="white" class="q-mt-md">
-          Started: {{ quizStart }}
-        </q-badge>
-        <q-badge text-color="red" color="white" class="q-mt-md">
-          Ended: {{ quizEnd }}
-        </q-badge>
-      </q-card-section>
+        <div class="row justify-between ">
+          <div class="row items-center">
+            <q-icon name="score" size="50px" color="yellow" />
+            <div class="q-mt-lg q-ml-sm">
+              <div class="text-h5">{{ quizName }}</div>
+              <div class="text-caption text-grey-8 q-mt-xs">
+                {{ quizDate }}
+              </div>
+            </div>
+          </div>
 
-      <q-card-section>
-        <div class="text-h6">Student: {{ studentName }}</div>
-        <div class="text-h6">Score: {{ studentScore }}</div>
-      </q-card-section>
-
-      <q-card-section>
-        <div v-for="(question, index) in questions" :key="index" class="q-mb-md">
-          <div class="text-h6">{{ index + 1 }}. {{ question.question }}</div>
-          <div v-for="(option, optionIndex) in question.options" :key="optionIndex" class="q-mt-xs">
-            <q-item>
-              <q-item-section>
-                <q-item-label>{{ option.text }}</q-item-label>
-                <q-item-label v-if="option.correct" class="text-green">
-                  (Correct Answer)
-                </q-item-label>
-              </q-item-section>
-            </q-item>
+          <div class="column justify-center ">
+            <div class="q-pb-sm">
+              <q-badge text-color="green" color="white" class="q-mr-sm">
+                Started: {{ quizStart }}
+              </q-badge>
+            </div>
+            <q-badge text-color="red" color="white" class="q-mr-sm">
+              Ended: {{ quizEnd }}
+            </q-badge>
           </div>
         </div>
+        <q-card-section>
+          <div class="row q-gutter-sm ">
+            <div class="text-h5"> {{ studentName }}</div>
+            <div class="text-h5"> <span class="text-yellow">{{ studentScore }}</span>/{{ totalPoint }}</div>
+          </div>
       </q-card-section>
+      </q-card-section>
+
+
+
+      <div class="q-mb-xl">
+        <div class="q-gutter-md">
+          <div
+            v-for="(question, index) in questions" :key="index"
+            class="q-mb-sm flex justify-center"
+          >
+            <q-card
+              flat
+              bordered
+              class="w-1334 h-325"
+              :style="{ borderColor: getBorderColor(index) }"
+            >
+              <q-card-section>
+                <div class="row items-center">
+                    <q-icon name="score" size="30px" color="yellow" class="q-mr-sm" />
+                    <div class="text-subtitle1">Question {{ index + 1 }}</div>
+                  </div>
+                <div class="q-mt-sm">{{ question.question }}</div>
+
+                <q-list class="q-mt-sm">
+                  <q-item
+                    v-for="(option, optionIndex) in question.options" :key="optionIndex"
+                  >
+                    <q-item-section>
+                      <q-radio
+                        v-model="selectedOption[index]"
+                        :val="option.text"
+                        :label="option.text"
+                        :class="{
+                          'text-green': option.correct,
+                          'text-red': selectedOption[index] === option.text && !option.correct,
+                        }"
+                      />
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+      </div>
     </q-card>
+
+    <div class="row justify-end q-mt-lg">
+      <q-btn
+        label="Close"
+        color="red-11"
+        @click="closeQuiz"
+        class="h-42 w-99 br-8"
+        text-color="red"
+        no-caps
+      />
+    </div>
   </q-page>
+
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { LocalStorage } from 'quasar';
 
+
+const router = useRouter();
 const route = useRoute();
-
 const quizName = ref('');
 const quizDate = ref('');
 const quizStart = ref('');
 const quizEnd = ref('');
 const studentName = ref('');
 const studentScore = ref(0);
+const totalPoint = ref<number>(0)
 const questions = ref<any[]>([]);
+const selectedOption = ref<any[]>([]);
 
 onMounted(() => {
-  // الحصول على البيانات من route.query
-  const { username, score, quizName: name, end, start, questions: quizQuestions } = route.query;
+  const email = route.query.email as string;
+  const name = route.query.name as string;
 
-  // تعيين القيم المناسبة
-  quizName.value = name as string;
-  quizDate.value = ''; // يمكنك إضافته حسب الحاجة
-  quizStart.value = start as string;
-  quizEnd.value = end as string;
-  studentName.value = username as string; // تأكد من أنك تتلقى القيمة هنا
-  studentScore.value = Number(score); // تحويل الدرجة إلى عدد
+  const localStorageData = LocalStorage.getItem('allQuizResults') as Record<string, any>;
 
-  // تحويل البيانات إلى مصفوفة
-  questions.value = quizQuestions ? JSON.parse(quizQuestions as string) : [];
+
+  const student = localStorageData[email];
+  if (student) {
+
+    const quiz = student.quizzes.find((q: any) => q.quiz.name === name);
+    if (quiz) {
+      studentName.value = student.name.username;
+      studentScore.value = quiz.score;
+      totalPoint.value = quiz.quiz.totalPoint;
+      quizName.value = quiz.quiz.name;
+      quizDate.value = quiz.quiz.date;
+      quizStart.value = quiz.quiz.start;
+      quizEnd.value = quiz.quiz.end;
+      questions.value = quiz.questions;
+      selectedOption.value = quiz.selectedOption;
+    }
+  }
 });
+
+
+const getBorderColor = (index: number) => {
+  const selectedAnswer = selectedOption.value[index];
+  const question = questions.value[index];
+
+  if (!selectedAnswer) {
+    return 'transparent';
+  }
+
+
+  if (question.options.some((option: any) => option.text === selectedAnswer && option.correct)) {
+    return 'green';
+  }
+
+  return 'red';
+};
+
+const closeQuiz = () => {
+  router.push({ path: '/teacher/quiz' });
+};
 </script>
 
 <style>
-/* يمكنك إضافة أي أنماط مخصصة هنا */
 </style>

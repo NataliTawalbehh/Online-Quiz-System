@@ -2,40 +2,37 @@
   <q-page class="q-pa-md">
     <q-card flat bordered class="q-mb-md br-8">
       <q-card-section>
-        <div class="row justify-between q-pa-sm">
-          <div>
-            <div class="row items-center">
-              <q-icon name="score" size="50px" color="yellow" />
-              <div class="q-mt-lg q-ml-sm">
-                <div class="text-h5">{{ result.title }}</div>
-                <div class="text-caption text-grey-8 q-mt-xs">
-                  {{ result.date }}
-                </div>
+        <div class="row justify-between ">
+          <div class="row items-center">
+            <q-icon name="score" size="50px" color="yellow"  />
+            <div class="q-mt-lg q-ml-sm">
+              <div class="text-h5">{{ quizNames }}</div>
+              <div class="text-caption text-grey-8 q-mt-xs">
+                {{ quizDate }}
               </div>
             </div>
-            <div class="text-h2 row justify-start q-ml-sm font-38 font-family">
-              {{ result.score }}/{{ result.totalPoint }}
-            </div>
           </div>
-
-          <div class="column justify-center q-pb-xl">
-            <div class="q-pb-md">
+          <div class="column justify-center ">
+            <div class="q-pb-sm">
               <q-badge text-color="green" color="white" class="q-mr-sm">
-                Started: {{ result.startQuiz }}
+                Started: {{ quizStart }}
               </q-badge>
             </div>
             <q-badge text-color="red" color="white" class="q-mr-sm">
-              Ended: {{ result.endQuiz }}
+              Ended: {{ quizEnd }}
             </q-badge>
           </div>
         </div>
+        <q-card-section>
+        <div class="text-h4" > <span class="text-yellow">{{ studentScore }}</span>/{{ quizTotalPoint }}</div>
       </q-card-section>
+      </q-card-section>
+
 
       <div class="q-mb-xl">
         <div class="q-gutter-md">
           <div
-            v-for="(question, index) in result.questions"
-            :key="index"
+            v-for="(question, index) in questions" :key="index"
             class="q-mb-sm flex justify-center"
           >
             <q-card
@@ -45,26 +42,24 @@
               :style="{ borderColor: getBorderColor(index) }"
             >
               <q-card-section>
-                <div class="row justify-between items-center">
-                  <div class="text-subtitle1">Question {{ index + 1 }}</div>
-                </div>
+                <div class="row items-center">
+                    <q-icon name="score" size="30px" color="yellow" class="q-mr-sm" />
+                    <div class="text-subtitle1">Question {{ index + 1 }}</div>
+                  </div>
                 <div class="q-mt-sm">{{ question.question }}</div>
 
                 <q-list class="q-mt-sm">
                   <q-item
-                    v-for="(option, optionIndex) in question.options"
-                    :key="optionIndex"
+                    v-for="(option, optionIndex) in question.options" :key="optionIndex"
                   >
                     <q-item-section>
                       <q-radio
-                        v-model="eventBus.selectedOption[index]"
+                        v-model="selectedOption[index]"
                         :val="option.text"
                         :label="option.text"
                         :class="{
                           'text-green': option.correct,
-                          'text-red':
-                            result.selectedOption[index] === option.text &&
-                            !option.correct,
+                          'text-red': selectedOption[index] === option.text && !option.correct,
                         }"
                       />
                     </q-item-section>
@@ -91,55 +86,63 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import eventBus from '../../Event/QuizEventBus';
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { QuizResults } from 'src/models/Test';
+import { LocalStorage } from 'quasar';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
+const studentScore = ref<number>(0);
+const quizNames = ref<string>('');
+const quizDate = ref<string>('');
+const quizStart = ref<string>('');
+const quizEnd = ref<string>('');
+const quizTotalPoint = ref<number>(0)
+const questions = ref<any[]>([]);
+const selectedOption = ref<Record<number, string>>({});
 
-interface Option {
-  text: string;
-  correct: boolean;
-}
-interface Question {
-  question: string;
-  options: Option[];
-}
+const fetchResults = () => {
+  const user = LocalStorage.getItem('user') as { email: string };
+  const allQuizResults = (LocalStorage.getItem('allQuizResults') || {}) as Record<string, QuizResults>;
+  const quizResult = allQuizResults[user.email]?.quizzes.find(quiz => quiz.quiz.name === route.query.quizName);
 
-const result = computed(() => {
-  return {
-    score: eventBus.score,
-    questions: eventBus.questions,
-    answers: eventBus.answers,
-    title: eventBus.title,
-    startQuiz: eventBus.startQuiz,
-    endQuiz: eventBus.endQuiz,
-    date: eventBus.date,
-    selectedOption: eventBus.selectedOption,
-    totalPoint: eventBus.totalPoint,
-  };
-});
+  if (quizResult) {
+    studentScore.value = quizResult.score;
+    quizTotalPoint.value = quizResult.quiz.totalPoint;
+    quizNames.value= quizResult.quiz.name;
+    quizDate.value = quizResult.quiz.date;
+    quizStart.value = quizResult.quiz.start;
+    quizEnd.value = quizResult.quiz.end;
+    questions.value = quizResult.questions;
+    selectedOption.value = quizResult.selectedOption;
+  }
+};
 
-// const getBorderColor = (index: number) => {
-//   if (result.value.selectedOption[index] === result.value.questions[index].options.correct) {
-//     return 'green';
-//   } else {
-//     return 'red';
-//   }
-// };
+onMounted(() =>{
+  fetchResults();
+})
+
 
 const getBorderColor = (index: number) => {
-  const selectedAnswer = result.value.selectedOption[index];
-  const question: Question = result.value.questions[index];
+  const selectedAnswer = selectedOption.value[index];
+  const question = questions.value[index];
 
-  const correctAnswer = question.options.find(
-    (opt: Option) => opt.correct
-  )?.text;
+  if (!selectedAnswer) {
+    return 'transparent';
+  }
 
-  return selectedAnswer === correctAnswer ? 'green' : 'red';
+
+  if (question.options.some((option: any) => option.text === selectedAnswer && option.correct)) {
+    return 'green';
+  }
+
+  return 'red';
 };
 
 const closeQuiz = () => {
   router.push({ path: '/student/quize' });
 };
+
 </script>

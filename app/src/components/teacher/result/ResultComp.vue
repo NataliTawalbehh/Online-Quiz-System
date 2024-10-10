@@ -1,11 +1,11 @@
 <template>
-  <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 q-px-md q-mt-md" @click="navigateToGrade(index ,quiz.name)">
+  <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 q-pa-sm" @click="navigateToGrade(index ,quiz.name)">
     <q-card class="br-8">
       <q-card-section>
         <div class="row justify-between items-center">
           <div>
             <div class="quiz-title text-h5">
-              <q-icon name="score" size="30px" />
+              <q-icon name="score" size="30px" color="yellow" />
               {{ quiz.name }}
             </div>
             <span>{{ quiz.date }}</span>
@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
 import { useRouter } from 'vue-router';
-
+import {Quiz} from 'src/models/QuizzesModel'
 const router = useRouter();
 
 defineProps({
@@ -55,31 +55,6 @@ defineProps({
   },
 });
 
-interface Question {
-  question: string;
-  multipleChoices: boolean;
-  point: number;
-  options: {
-    text: string;
-    correct: boolean;
-  }[];
-}
-
-interface Quiz {
-  id: number;
-  date: string;
-  description: string;
-  name: string;
-  teacher: string;
-  points: number;
-  students: number;
-  start: string;
-  end: string;
-  status: string;
-  totalQuestion: number;
-  totalPoint: number;
-  questions: Question[];
-}
 
 const navigateToGrade = (index: number, quizName: string) => {
   console.log('Navigating to result for quiz index:', index);

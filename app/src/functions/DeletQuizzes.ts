@@ -1,32 +1,32 @@
 import DataObject from 'src/models/DataObject';
 import { LocalStorage } from 'quasar';
 import FuncAsync from './FuncAsync';
+import {Quiz} from 'src/models/QuizzesModel'
+// interface Question {
+//   question: string;
+//   multipleChoices: boolean;
+//   point: number;
+//   options: {
+//     text: string;
+//     correct: boolean;
+//   }[];
+// }
 
-interface Question {
-  question: string;
-  multipleChoices: boolean;
-  point: number;
-  options: {
-    text: string;
-    correct: boolean;
-  }[];
-}
-
-interface Quiz {
-  id: number;
-  date: string;
-  description: string;
-  name: string;
-  teacher: string;
-  points: number;
-  students: number;
-  start: string;
-  end: string;
-  status: string;
-  totalQuestion: number;
-  totalPoint: number;
-  questions: Question[];
-}
+// interface Quiz {
+//   id: number;
+//   date: string;
+//   description: string;
+//   name: string;
+//   teacher: string;
+//   points: number;
+//   students: number;
+//   start: string;
+//   end: string;
+//   status: string;
+//   totalQuestion: number;
+//   totalPoint: number;
+//   questions: Question[];
+// }
 
 export default class DeletQuizzes implements FuncAsync<DataObject, Quiz[]> {
   async executeAsync(options?: DataObject): Promise<Quiz[]> {

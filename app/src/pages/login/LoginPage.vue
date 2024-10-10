@@ -90,7 +90,7 @@
         </q-card-section>
 
         <q-card-section class="column items-center">
-          <div class="text-h4">
+          <div class="text-h9">
             Create Account in
             <span style="color: #666cff">Online Quiz System</span>
           </div>
@@ -221,7 +221,7 @@ const onRegister = (): void => {
   LocalStorage.set('users', users);
 
   console.log('User registered:', newUser);
-  showRegisterDialog.value = false; 
+  showRegisterDialog.value = false;
 };
 </script>
 

@@ -5,7 +5,7 @@
         <div class="row justify-between items-center">
           <div>
             <div class="quiz-title text-h5">
-              <q-icon name="score" size="30px" />
+              <q-icon name="score" size="30px" color="yellow" />
               {{ quiz.name }}
             </div>
             <span>{{ quiz.date }}</span>
@@ -24,9 +24,9 @@
           <div class="text-body1">
             {{ quiz.teacher }}
             <br />
-            <span>{{ quiz.points }} Points</span>
+            <span>{{ quiz.totalPoint  }} Points</span>
             <br />
-            <span>{{ quiz.students }} Students</span>
+            <span>{{ quiz.description }} Students</span>
           </div>
         </div>
       </q-card-section>
@@ -38,7 +38,7 @@
 <script setup lang="ts">
 // import { ref, computed } from 'vue';
 import { PropType } from 'vue';
-
+import {Quiz} from 'src/models/QuizzesModel'
 
 
 defineProps({
@@ -48,38 +48,9 @@ defineProps({
   },
 });
 
-interface Question {
-question:string;
-multipleChoices: boolean;
-point:number;
-options: {
-  text: string;
-  correct: boolean;
-}[];
-
-}
-
-
-interface Quiz {
-id: number;
-date: string;
-description: string;
-name: string;
-teacher: string;
-points: number;
-students: number;
-start: string;
-end: string;
-status: string;
-totalQuestion: number;
-totalPoint:number
-questions:Question[]
-}
 </script>
 
 <style scoped>
-
-
 .q-card {
   max-width: 100%;
   transition: transform 0.3s ease;

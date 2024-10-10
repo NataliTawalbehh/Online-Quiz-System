@@ -12,7 +12,7 @@ export interface Question {
   }
 
 
-  export interface Quiz {
+export interface Quiz extends DataObject {
   id: number;
   date: string;
   description: string;
@@ -26,21 +26,4 @@ export interface Question {
   totalQuestion: number;
   totalPoint:number
   questions:Question[]
-  }
-
-  export interface User {
-    username: string;
-    email: string;
-    password: string;
-    isTeacher: boolean;
-    role: string;
-  }
-export interface QuizResults extends DataObject {
-  name: User;
-  quizzes: {
-    quiz: Quiz;
-    score: number;
-    questions: Question[];
-    answer: DataObject;
-    selectedOption: DataObject;
-  }[];}
+  };

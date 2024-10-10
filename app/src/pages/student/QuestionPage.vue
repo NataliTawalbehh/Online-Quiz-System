@@ -11,13 +11,15 @@
 
   <div>
     <q-btn
-      class="margin-left font-25"
+      class="font-25"
       flat
       disable
       color="red"
       :label="timer"
       :ripple="false"
-    />
+      style="min-width: 2590px; text-align: center;"
+      no-caps
+    > min </q-btn>
     <QuestionComp :quiz="quiz" />
   </div>
 </template>
@@ -27,37 +29,13 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import QuestionComp from 'src/components/student/quiz/QuestionComp.vue';
 import GetQuizzesFun from 'src/functions/GetQuizzesFun';
+import {Quiz} from 'src/models/QuizzesModel'
 
 const route = useRoute();
 const quizName = ref<string | null>(null);
 
 const quizzes = ref<Quiz[]>([]);
 
-interface Question {
-  question: string;
-  multipleChoices: boolean;
-  point: number;
-  options: {
-    text: string;
-    correct: boolean;
-  }[];
-}
-
-interface Quiz {
-  id: number;
-  date: string;
-  description: string;
-  name: string;
-  teacher: string;
-  points: number;
-  students: number;
-  start: string;
-  end: string;
-  status: string;
-  totalQuestion: number;
-  totalPoint: number;
-  questions: Question[];
-}
 
 const quiz = ref<Quiz | null >();
 
@@ -73,19 +51,25 @@ onMounted(async () => {
 });
 
 
-const time = ref<number>(45 * 60);
-const timer = ref<string>(`${time.value / 60}:${Math.ceil(time.value % 60)}`);
+const time = ref<number>(1 * 60); // تبدأ من دقيقة واحدة (60 ثانية)
+const timer = ref<string>(formatTime(time.value)); // تهيئة timer
 
 const instance = setInterval(() => {
-  timer.value = `${Math.ceil(time.value / 60) < 10 ? '0' : ''}${Math.ceil(
-    time.value / 60
-  )}:${Math.ceil(time.value % 60) < 10 ? '0' : ''}${Math.ceil(
-    time.value % 60
-  )}`;
-  time.value = time.value - 1;
+  if (time.value > 0) {
+    time.value--; // نقص ثانية واحدة
+    timer.value = formatTime(time.value); // تحديث الوقت المعروض
+  } else {
+    clearInterval(instance); // إيقاف المؤقت عندما يصل إلى 0
+  }
 }, 1000);
 
+function formatTime(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
 onBeforeUnmount(() => {
-  clearInterval(instance);
+  clearInterval(instance); // إيقاف المؤقت عند تدمير المكون
 });
 </script>

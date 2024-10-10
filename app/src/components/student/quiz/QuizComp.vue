@@ -5,7 +5,7 @@
         <div class="row justify-between items-center">
           <div>
             <div class="quiz-title text-h5">
-              <q-icon name="score" size="30px" />
+              <q-icon name="score" size="30px" color="yellow"/>
               {{ quiz.name }}
             </div>
             <span>{{ quiz.date }}</span>
@@ -47,6 +47,7 @@
 <script setup lang="ts">
 // import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import {Quiz} from 'src/models/QuizzesModel'
 
 const router = useRouter();
 defineProps({
@@ -60,33 +61,6 @@ defineProps({
   },
 });
 
-interface Question {
-question:string;
-multipleChoices: boolean;
-point:number;
-options: {
-  text: string;
-  correct: boolean;
-}[];
-
-}
-
-
-interface Quiz {
-id: number;
-date: string;
-description: string;
-name: string;
-teacher: string;
-points: number;
-students: number;
-start: string;
-end: string;
-status: string;
-totalQuestion: number;
-totalPoint:number
-questions:Question[]
-}
 
 const handleQuizClick = (index: number, quizName: string) => {
   console.log('Quiz Index: ', index);

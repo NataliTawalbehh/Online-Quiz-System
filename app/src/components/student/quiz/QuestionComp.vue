@@ -20,9 +20,17 @@
         class="q-mb-lg"
       >
         <div class="q-card__section column">
-          <div class="text-h5 q-mb-lg">
-            <q-icon name="score" size="40px" color="yellow" />
-            Question {{ index + 1 }}: {{ question.question }}
+          <div class="text-h6 q-mb-lg text-black" >
+            <q-icon name="score" size="30px" color="yellow" />
+            Question {{ index + 1 }}
+          </div>
+        </div>
+
+
+        <div class="q-card__section column">
+          <div class="text-body1 q-mb-lg">
+
+            {{ question.question }}
           </div>
         </div>
 
@@ -35,6 +43,7 @@
             <q-radio
               v-model="selectedOption[currentQuestionIndex]"
               :val="option.text"
+              po
             />
             {{ option.text }}
           </div>
@@ -85,7 +94,7 @@
           label="Submit"
           color="red"
           class="w-109 br-8"
-          to="/score"
+          @click="submitQuiz"
           no-caps
         />
       </q-card-actions>
@@ -95,36 +104,11 @@
 
 <script setup lang="ts">
 import DataObject from 'src/models/DataObject';
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import { LocalStorage } from 'quasar';
-import GetAllQuizResults from 'src/functions/GetAllQuizResults';
-import eventBus from '../../../Event/QuizEventBus';
+// import GetAllQuizResults from 'src/functions/GetAllQuizResults';
+import {QuizResults, User,Quiz, } from 'src/models/Test'
 
-interface Question {
-  question: string;
-  multipleChoices: boolean;
-  point: number;
-  options: {
-    text: string;
-    correct: boolean;
-  }[];
-}
-
-interface Quiz {
-  id: number;
-  date: string;
-  description: string;
-  name: string;
-  teacher: string;
-  points: number;
-  students: number;
-  start: string;
-  end: string;
-  status: string;
-  totalQuestion: number;
-  totalPoint: number;
-  questions: Question[];
-}
 
 const currentQuestionIndex = ref<number>(0);
 const selectedOption = ref<DataObject>({});
@@ -174,24 +158,7 @@ const goToPreviousQuestion = () => {
     selectedOption.value[`${currentQuestionIndex.value}`] = answers.value[currentQuestionIndex.value] || '';
   }
 };
-interface User {
-    username: string;
-    email: string;
-    password: string;
-    isTeacher: boolean;
-    role: string;
-  }
 
-interface QuizResults {
-  name: User;
-  quizzes: {
-    quiz: Quiz;
-    score: number;
-    questions: Question[];
-    answer: DataObject;
-    selectedOption: DataObject;
-  }[];
-}
 const openSubmitDialog = async () => {
   const score = calculateScore();
   const user = LocalStorage.getItem('user') as User;
@@ -223,48 +190,79 @@ const openSubmitDialog = async () => {
     selectedOption: selectedOption.value
   });
 
-  // تحديث LocalStorage
   LocalStorage.set('allQuizResults', allQuizResults);
 
-  // let userResult = allQuizResults.find(result => result.name.username === user.username);
-
-  // if (!userResult[userEmail]) {
-  //   userResult[userEmail] = {
-  //     name: {
-  //       username: user.username,
-  //       email: user.email,
-  //       password: user.password,
-  //       isTeacher: user.isTeacher,
-  //       role: user.role
-  //     },
-  //     quizzes: []
-  //   };
-  //   allQuizResults[userEmail].push(userResult);
-  // }
-
-  // userResul.quizzes.push({
-  //   quiz: props.quiz,
-  //   score: score,
-  //   questions: props.quiz.questions,
-  //   answer: answers.value,
-  //   selectedOption: selectedOption.value
-  // });
-
-  // LocalStorage.set('allQuizResults', allQuizResults);
-
-  eventBus.score = score;
-  eventBus.questions = props.quiz?.questions;
-  eventBus.answers = answers.value;
-  eventBus.title = props.quiz?.name;
-  eventBus.endQuiz = props.quiz?.end;
-  eventBus.startQuiz = props.quiz?.start;
-  eventBus.date = props.quiz?.date;
-  eventBus.selectedOption = selectedOption.value;
-  eventBus.totalPoint = props.quiz.totalPoint;
 
   isSubmitDialogOpen.value = true;
 };
 
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const submitQuiz = () => {
+  isSubmitDialogOpen.value = false;
+
+  // هنا نقوم بحساب النتيجة
+  const score = calculateScore();
+
+  // حفظ النتيجة في LocalStorage
+  const user = LocalStorage.getItem('user') as User;
+  const userEmail = user.email;
+
+  let allQuizResults = (LocalStorage.getItem('allQuizResults') || {}) as Record<string, QuizResults>;
+
+  if (!allQuizResults[userEmail]) {
+    allQuizResults[userEmail] = {
+      name: {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        isTeacher: user.isTeacher,
+        role: user.role
+      },
+      quizzes: []
+    };
+  }
+
+  allQuizResults[userEmail].quizzes.push({
+    quiz: props.quiz,
+    score: score,
+    questions: props.quiz.questions,
+    answer: answers.value,
+    selectedOption: selectedOption.value
+  });
+
+  LocalStorage.set('allQuizResults', allQuizResults);
+
+  // توجيه المستخدم إلى صفحة النتائج
+  router.push({
+    path: '/score',
+    query: { quizName: props.quiz.name }
+  });
+};
+const time = ref<number>(1 * 60); // تبدأ من دقيقة واحدة (60 ثانية)
+const timer = ref<string>(formatTime(time.value)); // تهيئة timer
+
+const instance = setInterval(() => {
+  if (time.value > 0) {
+    time.value--; // نقص ثانية واحدة
+    timer.value = formatTime(time.value); // تحديث الوقت المعروض
+  } else {
+    clearInterval(instance); // إيقاف المؤقت عندما يصل إلى 0
+    submitQuiz(); // استدعاء الدالة الخاصة بتقديم الامتحان
+  }
+}, 1000);
+
+function formatTime(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+onBeforeUnmount(() => {
+  clearInterval(instance); // إيقاف المؤقت عند تدمير المكون
+});
 
 const calculateScore = () => {
   let score = 0;
