@@ -240,17 +240,9 @@ const createQuiz = async () => {
     end: endTime,
     totalQuestion: totalQuestion.value,
     totalPoint: totalPoint.value,
-
     questions: questions.value,
   };
   emit('add-quiz', newQuiz);
-
-  // const getQuizzesFun = new GetQuizzesFun();
-  // const existingQuizzes = await getQuizzesFun.executeAsync();
-
-  // const updatedQuizzes = [...existingQuizzes, newQuiz];
-
-  // LocalStorage.set('quizzes', updatedQuizzes);
 
   closeDialog();
 };

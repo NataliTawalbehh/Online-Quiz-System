@@ -87,7 +87,7 @@
             v-for="(quiz,i) in displayedQuizzes"
             :key="i"
             :quiz="quiz"
-             :index="i"
+            :index="i"
           />
         </div>
       </q-tab-panel>
@@ -133,8 +133,6 @@ onMounted(async () => {
   quizzes.value = await getQuizzesFun.executeAsync();
   console.log('Quizzes:', quizzes.value);
 });
-
-
 
 
 const filteredQuizzes = computed(() => {

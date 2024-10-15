@@ -256,9 +256,9 @@ const editQuiz = ref<Quiz>({ ...props.quiz });
 watch(
   () => props.quiz,
   (newQuiz) => {
-    editQuiz.value = { ...newQuiz };  // تأكد من تحديث editQuiz بالقيم الجديدة
+    editQuiz.value = { ...newQuiz };
   },
-  { immediate: true } // التأكد من أن المراقب يتم تشغيله عند أول تحميل.
+  { immediate: true } 
 );
 const questions = ref([
   {

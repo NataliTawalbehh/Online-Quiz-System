@@ -91,6 +91,7 @@ import { useRoute } from 'vue-router';
 import { QuizResults } from 'src/models/Test';
 import { LocalStorage } from 'quasar';
 import { useRouter } from 'vue-router';
+import DataObject from 'src/models/DataObject';
 
 const router = useRouter();
 const route = useRoute();
@@ -101,7 +102,7 @@ const quizStart = ref<string>('');
 const quizEnd = ref<string>('');
 const quizTotalPoint = ref<number>(0)
 const questions = ref<any[]>([]);
-const selectedOption = ref<Record<number, string>>({});
+const selectedOption = ref<DataObject>({});
 
 const fetchResults = () => {
   const user = LocalStorage.getItem('user') as { email: string };
