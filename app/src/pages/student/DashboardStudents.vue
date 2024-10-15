@@ -86,8 +86,6 @@ import {Quiz} from 'src/models/QuizzesModel'
 
 const tab = ref<string>('quize');
 const searchQuery = ref<string>('');
-
-
 const quizzes = ref<Quiz[]>([]);
 
 const filteredQuizzes = computed<Quiz[]>(() =>
@@ -111,7 +109,7 @@ const tabsHeader = ref([
   },
 ]);
 
-const fetchQuizzesFromLocalStorage = async () => {
+const fetchLocalStorage = async () => {
   try {
     const storedQuizzes = new GetQuizzesFun();
     const quizzesData = await storedQuizzes.executeAsync();
@@ -126,7 +124,7 @@ const fetchQuizzesFromLocalStorage = async () => {
 };
 
 onMounted(() => {
-  fetchQuizzesFromLocalStorage();
+  fetchLocalStorage();
 });
 
 const onFilterClick = () => {

@@ -8,7 +8,8 @@ export interface Question {
     text: string;
     correct: boolean;
   }[];
-
+  startTime: string; // وقت بداية السؤال
+  endTime: string;
   }
 
 
@@ -26,6 +27,7 @@ export interface Question {
   totalQuestion: number;
   totalPoint:number
   questions:Question[]
+  quizStartedAt?: number;
   }
 
   export interface User {
@@ -43,4 +45,7 @@ export interface QuizResults extends DataObject {
     questions: Question[];
     answer: DataObject;
     selectedOption: DataObject;
+    startTimeQuiz: string;
+    endTimeQuiz: string;
+    name: string;
   }[];}

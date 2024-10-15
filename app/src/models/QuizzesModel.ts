@@ -8,7 +8,8 @@ export interface Question {
     text: string;
     correct: boolean;
   }[];
-
+  startTime: string; // وقت بداية السؤال
+  endTime: string;
   }
 
 

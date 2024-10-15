@@ -1,5 +1,5 @@
 <template>
-  <q-dialog >
+  <q-dialog>
     <q-card class="w-900 hide-scrollbar" align="center">
       <q-card-section class="row justify-end">
         <q-btn
@@ -51,7 +51,6 @@
               </q-icon>
             </template>
           </q-input>
-
         </div>
 
         <div class="q-pa-sm col-12">
@@ -171,7 +170,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { date} from 'quasar';
+import { date } from 'quasar';
 // import {Quiz} from 'src/models/QuizzesModel'
 import { defineEmits } from 'vue';
 
@@ -181,9 +180,6 @@ const quizDescription = ref<string>('');
 const startTime = ref<string>('');
 const showDialog = ref<boolean>(false);
 const quizeDate = ref<string>('');
-
-
-
 
 const totalQuestion = computed(() => questions.value.length);
 const totalPoint = computed(() =>
@@ -219,7 +215,6 @@ const questions = ref([
   },
 ]);
 
-
 const addQuestion = () => {
   questions.value.push({
     question: '',
@@ -233,7 +228,6 @@ const addQuestion = () => {
     ],
   });
 };
-
 
 const createQuiz = async () => {
   const endTime = calculateEndTime(startTime.value);
@@ -261,7 +255,6 @@ const createQuiz = async () => {
   closeDialog();
 };
 
-
 const closeDialog = () => {
   showDialog.value = false;
 };
@@ -272,7 +265,3 @@ const deleteQuestion = (index: number) => {
 </script>
 
 <style scoped></style>
-
-
-
-

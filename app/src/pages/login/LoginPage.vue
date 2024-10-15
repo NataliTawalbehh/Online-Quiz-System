@@ -11,10 +11,10 @@
             />
             <span class="q-px-sm"> Online Quiz System </span>
           </div>
-          <div class="text-subtitle2 full-width q-mt-md">
+          <div class="text-subtitle2 width-364 q-mt-md">
             Welcome to Materialize! 👋
           </div>
-          <div class="text-caption full-width q-mt-sm">
+          <div class="text-caption width-364 q-mt-sm">
             Please sign-in to your account and start the adventure
           </div>
         </q-card-section>
@@ -32,17 +32,17 @@
             <q-input
               v-model="password"
               label="Password"
-              type="password"
+              :type="passwordToggle?'password':'text'"
               dense
               outlined
               class="custom-input q-mt-sm"
             >
               <template v-slot:append>
-                <q-icon name="visibility" class="icon-icon" />
+                <q-icon name="visibility" class="icon-icon"  @click="()=>{passwordToggle=!passwordToggle}"/>
               </template>
             </q-input>
           </div>
-          <div class="row justify-between full-width">
+          <div class="row justify-between width-364">
             <q-checkbox
               v-model="rememberMe"
               label="Remember Me"
@@ -52,7 +52,7 @@
 
             <q-btn flat no-caps label="Forgot Password?" color="primary" />
           </div>
-          <div class="full-width">
+          <div class="width-364">
             <q-btn
               no-caps
               unelevated
@@ -177,6 +177,7 @@ const rememberMe = ref<boolean>(false);
 const username = ref<string>('');
 const confirmPassword = ref<string>('');
 const isTeacher = ref<boolean>(false);
+const passwordToggle=ref<boolean>(true);
 
 const onLogin = () => {
   const users: User[] = LocalStorage.getItem('users') || [];

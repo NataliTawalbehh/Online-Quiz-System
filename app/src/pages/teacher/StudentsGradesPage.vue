@@ -54,7 +54,7 @@
         @row-click="handleRowClick"
       >
         <template v-slot:body-cell-score="props">
-          <div class="row items-center q-gutter-sm">
+          <td class="row items-center q-gutter-sm">
             <q-linear-progress
               :value="props.row.score / props.row.totalPoints"
               color="blue"
@@ -63,7 +63,7 @@
               style="width: 100px"
             />
             <div>{{ props.row.score }}/{{ props.row.totalPoints }}</div>
-          </div>
+          </td>
         </template>
       </q-table>
     </div>

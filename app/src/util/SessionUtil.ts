@@ -62,6 +62,7 @@ export default class SessionUtil {
   public static async logout(): Promise<void> {
     Loading.show();
     try {
+      LocalStorage.removeItem('user')
       try {
         if (SessionUtil.getToken()) {
           // await new LogoutFunc().executeAsync({
@@ -70,7 +71,9 @@ export default class SessionUtil {
           NotifyUtil.success({
             message: StringUtil.translate('loggedOut'),
           });
+
         }
+
       } catch (error) {}
     } catch (error) {
       console.error(error);

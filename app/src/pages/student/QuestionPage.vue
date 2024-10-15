@@ -1,26 +1,25 @@
 <template>
   <div
     v-if="quizName"
-    class="column items-center color-text line-height font-w font-size font-family"
+    class="column items-center q-px-xl"
+    style="width: 70%; margin: auto"
     v-bind="$attrs"
   >
-    <div class="quiz-title">
-      <h2>{{ quizName }}</h2>
-    </div>
-  </div>
+    <div
+      class="full-width col-auto column justify-center items-center q-pa-sm"
+    >
 
-  <div>
-    <q-btn
-      class="font-25"
-      flat
-      disable
-      color="red"
-      :label="timer"
-      :ripple="false"
-      style="min-width: 2590px; text-align: center;"
-      no-caps
-    > min </q-btn>
-    <QuestionComp :quiz="quiz" />
+      <div class="color-text font-w font-size font-family">{{ quizName }}</div>
+
+      <div class="row justify-end full-width q-mt-lg q-py-sm">
+
+      </div>
+
+    </div>
+
+
+    <QuestionComp class="full-width" :quiz="quiz" />
+
   </div>
 </template>
 
@@ -29,37 +28,32 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import QuestionComp from 'src/components/student/quiz/QuestionComp.vue';
 import GetQuizzesFun from 'src/functions/GetQuizzesFun';
-import {Quiz} from 'src/models/QuizzesModel'
+import { Quiz } from 'src/models/QuizzesModel';
 
 const route = useRoute();
 const quizName = ref<string | null>(null);
-
 const quizzes = ref<Quiz[]>([]);
-
-
-const quiz = ref<Quiz | null >();
+const quiz = ref<Quiz | null>();
 
 onMounted(async () => {
   const getQuizzesFun = new GetQuizzesFun();
   quizzes.value = await getQuizzesFun.executeAsync();
 
-  quizName.value = route.query.name as string || null;
+  quizName.value = (route.query.name as string) || null;
   const quizId = parseInt(route.params.index as string);
-  quiz.value = quizzes.value.find((q,i) => i === quizId) || null;
-  console.log(quiz.value,11);
-
+  quiz.value = quizzes.value.find((q, i) => i === quizId) || null;
+  console.log(quiz.value, 11);
 });
 
-
-const time = ref<number>(1 * 60); // تبدأ من دقيقة واحدة (60 ثانية)
-const timer = ref<string>(formatTime(time.value)); // تهيئة timer
+const time = ref<number>(45 * 60);
+const timer = ref<string>(formatTime(time.value));
 
 const instance = setInterval(() => {
   if (time.value > 0) {
-    time.value--; // نقص ثانية واحدة
-    timer.value = formatTime(time.value); // تحديث الوقت المعروض
+    time.value--;
+    timer.value = formatTime(time.value);
   } else {
-    clearInterval(instance); // إيقاف المؤقت عندما يصل إلى 0
+    clearInterval(instance);
   }
 }, 1000);
 
@@ -70,6 +64,6 @@ function formatTime(seconds: number): string {
 }
 
 onBeforeUnmount(() => {
-  clearInterval(instance); // إيقاف المؤقت عند تدمير المكون
+  clearInterval(instance);
 });
 </script>
